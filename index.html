@@ -1,0 +1,251 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.app { font-family: var(--font-sans); padding: 1.5rem 0; max-width: 640px; margin: 0 auto; }
+.tabs { display: flex; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; margin-bottom: 1.5rem; }
+.tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--color-text-secondary); background: var(--color-background-primary); border: none; transition: all 0.15s; }
+.tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); }
+.tab:not(:last-child) { border-right: 0.5px solid var(--color-border-tertiary); }
+.panel { display: none; }
+.panel.active { display: block; }
+.week-header { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 12px; }
+.day-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+.day-card.today { border-color: var(--color-border-primary); background: var(--color-background-secondary); }
+.day-label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); min-width: 28px; }
+.day-card.today .day-label { color: var(--color-text-primary); }
+.day-info { flex: 1; }
+.day-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 2px; }
+.day-sub { font-size: 13px; color: var(--color-text-secondary); }
+.today-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: var(--color-background-info); color: var(--color-text-info); font-weight: 500; white-space: nowrap; }
+.video-links { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.video-btn { padding: 5px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-size: 12px; cursor: pointer; white-space: nowrap; text-decoration: none; display: inline-block; transition: background 0.15s; }
+.video-btn:hover { background: var(--color-background-secondary); }
+.note { font-size: 13px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; margin-top: 1rem; line-height: 1.6; }
+.tip { font-size: 13px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; margin-bottom: 1rem; line-height: 1.5; }
+.upload-area { border: 1.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 1.5rem; text-align: center; cursor: pointer; transition: background 0.2s; margin-bottom: 1rem; }
+.upload-area:hover { background: var(--color-background-secondary); }
+.upload-icon { font-size: 28px; margin-bottom: 6px; }
+.upload-text { font-size: 14px; color: var(--color-text-secondary); }
+.upload-text strong { color: var(--color-text-primary); font-weight: 500; }
+.previews { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 1rem; }
+.preview-item { position: relative; border-radius: var(--border-radius-md); overflow: hidden; aspect-ratio: 1; background: var(--color-background-secondary); }
+.preview-item img { width: 100%; height: 100%; object-fit: cover; }
+.preview-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); border: none; cursor: pointer; color: white; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+.context-label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 6px; display: block; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.chip { padding: 5px 12px; border-radius: 20px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-secondary); cursor: pointer; transition: all 0.15s; }
+.chip.selected { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
+.analyze-btn { width: 100%; padding: 11px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.analyze-btn:hover:not(:disabled) { background: var(--color-background-secondary); }
+.analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.result-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-top: 1rem; }
+.result-label { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+.result-content { font-size: 15px; color: var(--color-text-primary); line-height: 1.7; white-space: pre-wrap; }
+.loading-dots { display: inline-flex; gap: 4px; align-items: center; padding: 4px 0; }
+.loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--color-text-secondary); animation: bounce 1.2s infinite; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.4}40%{transform:translateY(-4px);opacity:1} }
+</style>
+
+<div class="app">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('train')">运动计划</button>
+    <button class="tab" onclick="switchTab('eat')">外卖分析</button>
+  </div>
+
+  <div class="panel active" id="panel-train">
+    <div class="week-header">本周计划 · 无器械床上训练</div>
+
+    <div class="day-card" id="day-mon">
+      <div class="day-label">周一</div>
+      <div class="day-info">
+        <div class="day-title">臀腿激活</div>
+        <div class="day-sub">周六野Zoey · 约25分钟</div>
+      </div>
+      <div class="video-links">
+        <a class="video-btn" href="https://www.youtube.com/watch?v=Mv0f47Y4wWg" target="_blank">膝盖友好 10min ↗</a>
+        <a class="video-btn" href="https://www.youtube.com/watch?v=_Gi8hMdWtmQ" target="_blank">翘臀不粗腿 ↗</a>
+      </div>
+    </div>
+
+    <div class="day-card" id="day-tue">
+      <div class="day-label">周二</div>
+      <div class="day-info">
+        <div class="day-title">休息</div>
+        <div class="day-sub">好好恢复，睡够比练多更重要</div>
+      </div>
+    </div>
+
+    <div class="day-card" id="day-wed">
+      <div class="day-label">周三</div>
+      <div class="day-info">
+        <div class="day-title">腰腹核心</div>
+        <div class="day-sub">周六野Zoey · 约20分钟</div>
+      </div>
+      <div class="video-links">
+        <a class="video-btn" href="https://www.youtube.com/watch?v=OTuUZfSGeuE" target="_blank">站立马甲线 10min ↗</a>
+        <a class="video-btn" href="https://www.youtube.com/watch?v=qT9aYCk5fmI" target="_blank">瘦下腹 5min ↗</a>
+      </div>
+    </div>
+
+    <div class="day-card" id="day-thu">
+      <div class="day-label">周四</div>
+      <div class="day-info">
+        <div class="day-title">休息</div>
+        <div class="day-sub">好好恢复，睡够比练多更重要</div>
+      </div>
+    </div>
+
+    <div class="day-card" id="day-fri">
+      <div class="day-label">周五</div>
+      <div class="day-info">
+        <div class="day-title">臀腿激活</div>
+        <div class="day-sub">周六野Zoey · 约25分钟</div>
+      </div>
+      <div class="video-links">
+        <a class="video-btn" href="https://www.youtube.com/watch?v=Mv0f47Y4wWg" target="_blank">膝盖友好 10min ↗</a>
+        <a class="video-btn" href="https://www.youtube.com/watch?v=_Gi8hMdWtmQ" target="_blank">翘臀不粗腿 ↗</a>
+      </div>
+    </div>
+
+    <div class="day-card" id="day-sat">
+      <div class="day-label">周六</div>
+      <div class="day-info">
+        <div class="day-title">休息 / 散步</div>
+        <div class="day-sub">周末自由，有精力可以去散步</div>
+      </div>
+    </div>
+
+    <div class="day-card" id="day-sun">
+      <div class="day-label">周日</div>
+      <div class="day-info">
+        <div class="day-title">腰腹核心</div>
+        <div class="day-sub">周六野Zoey · 约20分钟</div>
+      </div>
+      <div class="video-links">
+        <a class="video-btn" href="https://www.youtube.com/watch?v=OTuUZfSGeuE" target="_blank">站立马甲线 10min ↗</a>
+        <a class="video-btn" href="https://www.youtube.com/watch?v=qT9aYCk5fmI" target="_blank">瘦下腹 5min ↗</a>
+      </div>
+    </div>
+
+    <div class="note">太累的时候只做10分钟也算完成，不要因为做不完就完全跳过。实习期间能坚持4次/周已经很好了 💪</div>
+  </div>
+
+  <div class="panel" id="panel-eat">
+    <div class="tip">上传外卖菜单截图，AI帮你选最适合的菜。可以同时上传多家店对比，选好场景后开始分析。</div>
+    <div class="upload-area" onclick="document.getElementById('file-input').click()">
+      <div class="upload-icon">📷</div>
+      <div class="upload-text"><strong>点击上传菜单截图</strong><br>支持多张同时上传</div>
+    </div>
+    <input type="file" id="file-input" accept="image/*" multiple style="display:none">
+    <div class="previews" id="previews"></div>
+    <span class="context-label">就餐场景</span>
+    <div class="chips" id="scene-chips">
+      <div class="chip selected" data-value="工作日午餐">工作日午餐</div>
+      <div class="chip" data-value="工作日晚餐">工作日晚餐</div>
+      <div class="chip" data-value="聚餐">聚餐</div>
+      <div class="chip" data-value="夜宵">夜宵</div>
+      <div class="chip" data-value="奶茶甜品">奶茶甜品</div>
+    </div>
+    <span class="context-label">今天已经吃了什么？（可选）</span>
+    <input type="text" id="already-eaten" placeholder="例如：早上鸡蛋馒头，下午喝了奶茶..." style="width:100%;font-size:14px;padding:8px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);margin-bottom:12px;">
+    <button class="analyze-btn" id="analyze-btn" disabled onclick="analyze()">上传截图后开始分析 ↗</button>
+    <div id="result-area"></div>
+  </div>
+</div>
+
+<script>
+const images = [];
+let selectedScene = '工作日午餐';
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active',(i===0&&tab==='train')||(i===1&&tab==='eat')));
+  document.getElementById('panel-train').classList.toggle('active',tab==='train');
+  document.getElementById('panel-eat').classList.toggle('active',tab==='eat');
+}
+
+const days = ['sun','mon','tue','wed','thu','fri','sat'];
+const todayCard = document.getElementById('day-'+days[new Date().getDay()]);
+if (todayCard) {
+  todayCard.classList.add('today');
+  const badge = document.createElement('span');
+  badge.className = 'today-badge';
+  badge.textContent = '今天';
+  const info = todayCard.querySelector('.day-info');
+  info.parentNode.insertBefore(badge, info.nextSibling);
+}
+
+document.getElementById('file-input').addEventListener('change', e => handleFiles(e.target.files));
+document.getElementById('scene-chips').addEventListener('click', e => {
+  if (e.target.classList.contains('chip')) {
+    document.querySelectorAll('#scene-chips .chip').forEach(c => c.classList.remove('selected'));
+    e.target.classList.add('selected');
+    selectedScene = e.target.dataset.value;
+  }
+});
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => { images.push({base64:e.target.result}); renderPreviews(); updateBtn(); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviews() {
+  const el = document.getElementById('previews');
+  el.innerHTML = '';
+  images.forEach((img,i) => {
+    const div = document.createElement('div');
+    div.className = 'preview-item';
+    div.innerHTML = `<img src="${img.base64}"><button class="preview-remove" onclick="removeImage(${i})">×</button>`;
+    el.appendChild(div);
+  });
+}
+
+function removeImage(i) { images.splice(i,1); renderPreviews(); updateBtn(); }
+
+function updateBtn() {
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = images.length===0;
+  btn.textContent = images.length>0 ? `分析 ${images.length} 张截图 ↗` : '上传截图后开始分析 ↗';
+}
+
+async function analyze() {
+  if (!images.length) return;
+  const alreadyEaten = document.getElementById('already-eaten').value.trim();
+  document.getElementById('result-area').innerHTML = `<div class="result-card"><div class="result-label">AI 分析中</div><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+  document.getElementById('analyze-btn').disabled = true;
+  const content = [];
+  images.forEach((img,i) => {
+    const mediaType = img.base64.includes('data:image/png')?'image/png':'image/jpeg';
+    content.push({type:'image',source:{type:'base64',media_type:mediaType,data:img.base64.split(',')[1]}});
+    content.push({type:'text',text:`第${i+1}张菜单截图`});
+  });
+  let userText = `就餐场景：${selectedScene}`;
+  if (alreadyEaten) userText += `\n今天已吃：${alreadyEaten}`;
+  userText += `\n请帮我从以上${images.length}张菜单截图中，选出最适合减脂的点餐方案。`;
+  content.push({type:'text',text:userText});
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`你是渊，专业减脂饮食顾问，正在帮助用户（162cm，约57kg，目标改善身材线条）分析外卖菜单。用户喜欢重口味和辣的，实习期间在杭州。目标是身材线条改善，不是单纯减重。请：1.识别菜单中的菜品 2.推荐最优点餐组合并说明原因 3.如有多家店告诉用户选哪家 4.给出简单的热量估算。语气像朋友，简洁直接，用中文。`,
+        messages:[{role:'user',content}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b=>b.type==='text')?.text||'分析失败，请重试';
+    document.getElementById('result-area').innerHTML = `<div class="result-card"><div class="result-label">渊的建议</div><div class="result-content">${text}</div></div>`;
+  } catch {
+    document.getElementById('result-area').innerHTML = `<div class="result-card"><div class="result-content" style="color:var(--color-text-danger)">出错了，检查网络后重试～</div></div>`;
+  }
+  document.getElementById('analyze-btn').disabled = false;
+  updateBtn();
+}
+</script>
